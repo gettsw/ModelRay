@@ -159,3 +159,7 @@ Analyses:
   - Only the local 1.5B base evaluation had completed: HarmBench 92%, XSTest-safe 51.6%, prefill 3.5%, sweep peak at layer 27 (d′ 7.52).
   - The prefill refusal is below the 20% bar, so latent fragility is declared uninformative for 1.5B, as pre-registered.
   - The whole 1.5B grid, base included, is re-run on JARVIS so that every number comes from the same hardware and software stack. Data splits are rebuilt there and checked against the local SHA-256 manifest (`data_manifest.sha256`).
+- **2026-11-05: 1.5B moved from JARVIS (queue too congested) to an AMD Developer Cloud MI300X (ROCm).**
+  - The plan is unchanged: the same grid, data (checked against the SHA-256 manifest), analysis and pre-registered criteria.
+  - The base and every checkpoint run on the same MI300X, so ROCm-versus-CUDA numerical differences only matter for the 0.5B-versus-1.5B comparison, not within 1.5B.
+  - Four grid workers run concurrently on the one GPU, each cell assigned to exactly one worker. This can't change any result: each cell is an independent train-and-evaluate run.
