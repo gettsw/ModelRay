@@ -85,3 +85,30 @@ def test_cli_sweep_prints_peak(make_auditor, tmp_path, monkeypatch, capsys):
     assert gate.main(["sweep", "--model", "m", "--config", str(tmp_path / "gate.json")]) == 0
     out = capsys.readouterr().out
     assert out.count("layer ") == 5 and "peak: layer" in out
+
+
+def test_cli_inconclusive_exits_3_unless_allowed(make_auditor, tmp_path, monkeypatch):
+    cfg = _cfg()
+    cfg.refusal.min_base_separation = 1e9  # base "has no refusal signal" -> validity issue -> INCONCLUSIVE
+    monkeypatch.setattr(gate.ModelAuditor, "from_pretrained", staticmethod(lambda ckpt, **kw: make_auditor()))
+    (tmp_path / "gate.json").write_text(cfg.model_dump_json())
+    args = ["audit", "--base", "b", "--tuned", "t", "--config", str(tmp_path / "gate.json"), "--out", str(tmp_path)]
+    assert gate.main(args) == 3
+    assert gate.main(args + ["--allow-inconclusive"]) == 0
+
+
+def test_shipped_example_config_parses():
+    from pathlib import Path
+
+    cfg = GateConfig.model_validate_json((Path(__file__).parents[1] / "examples" / "gate.json").read_text("utf-8"))
+    assert cfg.refusal and cfg.sycophancy and cfg.eval_awareness
+
+
+@pytest.mark.parametrize("content", [None, "{not json", '{"refusal": {"harmful": [], "harmless": [], "max_dorp": 1}}'])
+def test_bad_config_is_usage_error_not_fail(tmp_path, content):
+    path = tmp_path / "gate.json"
+    if content is not None:
+        path.write_text(content)
+    with pytest.raises(SystemExit) as e:
+        gate.main(["audit", "--base", "b", "--tuned", "t", "--config", str(path)])
+    assert e.value.code == 2

@@ -13,6 +13,7 @@ degrade. A model whose refusal mechanism has been ablated can still pass a small
 not pass this gate.
 
 ```bash
+git clone https://github.com/gettsw/ModelRay.git && cd ModelRay
 pip install -e .                                                       # or ".[sae]" for SAE probes
 model-ray sweep --model Qwen/Qwen2.5-0.5B-Instruct --config examples/gate.json   # once: pick the layer
 model-ray audit --base Qwen/Qwen2.5-0.5B-Instruct --tuned ./my-finetune --config examples/gate.json
@@ -21,7 +22,7 @@ model-ray audit --base Qwen/Qwen2.5-0.5B-Instruct --tuned ./my-finetune --config
 ## Two uses
 
 **CI gating for teams that fine-tune.** Add `model-ray audit` as a step after training. It exits
-`0` PASS, `1` FAIL or `3` INCONCLUSIVE, and writes `circuit_health.json` and `circuit_health.html`. By
+`0` PASS, `1` FAIL or `3` INCONCLUSIVE (`2` means a usage or config error, never a verdict), and writes `circuit_health.json` and `circuit_health.html`. By
 default INCONCLUSIVE also fails the build. A gate that cannot measure something does not wave it
 through.
 
@@ -80,6 +81,10 @@ it. A gate that has never failed is indistinguishable from one that doesn't work
 - Requires Python ≥ 3.10. Built on the TransformerLens `TransformerBridge`, which wraps the real
   Hugging Face model. The model you audit is therefore the model you ship, and any HF checkpoint path
   works.
+- **CPU or GPU.** Runs on CPU by default (`--dtype float32`). On a GPU pass `--device cuda`, and
+  `--dtype bfloat16` to halve memory. All validation so far ran on CPU in float32; the GPU and
+  bfloat16 paths are untested. 7B models realistically need a GPU.
+  Install the PyTorch build for your CUDA version first (see pytorch.org), then `pip install -e .`.
 - `pip install -e .` gives TransformerLens 4.x.
 - `pip install -e ".[sae]"` adds `sae_lens`, which currently requires TransformerLens < 4, so you get
   3.9. Both stacks are tested.

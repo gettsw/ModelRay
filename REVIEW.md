@@ -30,7 +30,7 @@ TransformerLens 3.9 with sae_lens 6.54.
 | `RefusalStabilityProbe` | Difference-in-means refusal direction (Arditi et al. 2024), fit on a base train half and scored as held-out d′ on both models. Optional first-token refusal probability | Two metrics instead of one (finding 6) |
 | `OverwriteDistanceProbe` | Logit-lens overwrite: correct vs suggested logit diff per layer. The gated metric is P(caves \| knows) | Re-specified, because the spec's cosine is ill-posed (finding 4) |
 | `EvaluationAwarenessProbe` | L2 logistic probe. Selectivity is measured against a layer-0 baseline, with group-held-out splits | Informational by default (finding 7) |
-| `ci/gate.py` | `GateConfig` (JSON, unknown keys rejected), `run_audit` (loads models sequentially), `enforce` → `CircuitDegradationError`, `model-ray audit` CLI with exit codes 0/1/3 | Uses CI-based PASS/FAIL/INCONCLUSIVE and fails closed (finding 3). No context manager |
+| `ci/gate.py` | `GateConfig` (JSON, unknown keys rejected), `run_audit` (loads models sequentially), `enforce` → `CircuitDegradationError`, `model-ray audit` CLI with exit codes 0/1/3 (2 = usage/config error) | Uses CI-based PASS/FAIL/INCONCLUSIVE and fails closed (finding 3). No context manager |
 | `reports/generator.py` | JSON report as the source of truth, plus escaped HTML. Binds the report to weight, config and environment hashes. Embeds a limitations list | Named "report", not "certificate" (finding 8) |
 | — | `ablate_direction()`: a known-bad control | Not in the spec (finding 12) |
 

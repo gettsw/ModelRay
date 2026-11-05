@@ -95,19 +95,22 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--base", required=True, help="HF hub id or local checkpoint dir")
     a.add_argument("--tuned", required=True, help="HF hub id or local checkpoint dir")
     a.add_argument("--config", required=True, help="GateConfig JSON")
-    a.add_argument("--out", default="model_ray_report")
-    a.add_argument("--device", default=None)
-    a.add_argument("--dtype", default="float32")
-    a.add_argument("--allow-inconclusive", action="store_true")
+    a.add_argument("--out", default="model_ray_report", help="report directory (default: %(default)s)")
+    a.add_argument("--device", default=None, help="e.g. cpu, cuda (default: auto)")
+    a.add_argument("--dtype", default="float32", help="torch dtype, e.g. bfloat16 (default: %(default)s)")
+    a.add_argument("--allow-inconclusive", action="store_true", help="exit 0 on INCONCLUSIVE instead of 3")
     s = sub.add_parser("sweep", help="per-layer refusal separation on one model, to choose refusal.layer")
-    s.add_argument("--model", required=True)
+    s.add_argument("--model", required=True, help="HF hub id or local checkpoint dir")
     s.add_argument("--config", required=True, help="GateConfig JSON with a refusal section")
-    s.add_argument("--device", default=None)
-    s.add_argument("--dtype", default="float32")
+    s.add_argument("--device", default=None, help="e.g. cpu, cuda (default: auto)")
+    s.add_argument("--dtype", default="float32", help="torch dtype, e.g. bfloat16 (default: %(default)s)")
     args = ap.parse_args(argv)
 
-    with open(args.config, encoding="utf-8") as fh:
-        cfg = GateConfig.model_validate_json(fh.read())
+    try:  # a bad config is a usage error (exit 2), never a FAIL (1) a pipeline would blame on the model
+        with open(args.config, encoding="utf-8") as fh:
+            cfg = GateConfig.model_validate_json(fh.read())
+    except (OSError, ValueError) as e:
+        ap.error(f"--config {args.config}: {e}")
     kw = dict(device=args.device, dtype=args.dtype, batch_size=cfg.batch_size, chat_template=cfg.chat_template,
               processing=cfg.processing)
     if args.cmd == "sweep":
