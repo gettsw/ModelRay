@@ -163,3 +163,9 @@ Analyses:
   - The plan is unchanged: the same grid, data (checked against the SHA-256 manifest), analysis and pre-registered criteria.
   - The base and every checkpoint run on the same MI300X, so ROCm-versus-CUDA numerical differences only matter for the 0.5B-versus-1.5B comparison, not within 1.5B.
   - Four grid workers run concurrently on the one GPU, each cell assigned to exactly one worker. This can't change any result: each cell is an independent train-and-evaluate run.
+- **2026-11-05, MI300X execution note (before any checkpoint finished).**
+  - The 4 concurrent workers hung the MI300X VF. All four were stuck in GPU waits at step 1 for 14 minutes, with 0% memory activity.
+  - A solo process trained at about 0.1 s/step, so I killed the workers and ran the grid sequentially in one process (`run_cloud.sh`).
+  - No checkpoint had finished, so none was produced by the hung attempt. The base evaluation, which had finished first, was kept.
+  - The laptop's partial 1.5B outputs were moved to `runs/laptop_1.5B_partial/` and are not used.
+  - Results: [RESULTS_1.5B.md](RESULTS_1.5B.md).
