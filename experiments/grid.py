@@ -3,6 +3,7 @@
     python experiments/grid.py --model Qwen/Qwen2.5-0.5B-Instruct
 """
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -21,6 +22,8 @@ def run(*args):
 ap = argparse.ArgumentParser()
 ap.add_argument("--model", default="Qwen/Qwen2.5-0.5B-Instruct")
 ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1])
+ap.add_argument("--delete-models", action="store_true",
+                help="delete each merged checkpoint once evaluated (cluster quota; keeps harmful weights off shared disk)")
 ap.add_argument("--phase", type=int, default=1, help="2 = the negatives/lead-time cells added after phase 1")
 a = ap.parse_args()
 short = a.model.split("/")[-1]
@@ -36,6 +39,11 @@ if a.phase == 2:  # see DESIGN.md change log: phase 1 produced no intact checkpo
     cells += [("harmful", s, f"harmful__s{s}", []) for s in (1, 2)]
 for seed in a.seeds:
     for cond, steps, tag, extra in cells:
+        name = f"{short}__{tag}__seed{seed}"
+        if (HERE / "runs" / name / "eval.json").exists():  # resumable even after the weights are deleted
+            continue
         run(str(HERE / "train.py"), "--model", a.model, "--condition", cond, "--steps", str(steps),
             "--seed", str(seed), *extra)
-        run(str(HERE / "evaluate.py"), "--base", a.model, "--run", f"{short}__{tag}__seed{seed}")
+        run(str(HERE / "evaluate.py"), "--base", a.model, "--run", name)
+        if a.delete_models:
+            shutil.rmtree(HERE / "runs" / name / "model")
