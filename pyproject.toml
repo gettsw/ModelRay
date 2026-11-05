@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=77"]  # SPDX license expressions (PEP 639)
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "model-ray"
+version = "0.1.0"
+description = "White-box safety regression gate for fine-tuned open-weight transformers."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+keywords = ["ai-safety", "interpretability", "fine-tuning", "ci", "transformer-lens", "sparse-autoencoders"]
+dependencies = [
+    "torch>=2.1",
+    # TransformerBridge API. Tested on 3.9 (what sae_lens 6.x resolves to) and 4.3 (no sae_lens).
+    "transformer_lens>=3.9",
+    "numpy>=1.24",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+sae = ["sae_lens>=4.0"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+model-ray = "model_ray.ci.gate:main"
+
+[tool.setuptools.packages.find]
+include = ["model_ray*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
