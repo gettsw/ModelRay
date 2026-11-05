@@ -13,7 +13,8 @@ import os
 import time
 from pathlib import Path
 
-os.environ.setdefault("HF_HOME", "D:/hf_cache")
+if os.name == "nt":  # local Windows box: C: is nearly full
+    os.environ.setdefault("HF_HOME", "D:/hf_cache")
 import torch  # noqa: E402
 from transformers import AutoModelForCausalLM, AutoTokenizer  # noqa: E402
 

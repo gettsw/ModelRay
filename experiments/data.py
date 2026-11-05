@@ -14,7 +14,8 @@ import re
 import urllib.request
 from pathlib import Path
 
-os.environ.setdefault("HF_HOME", "D:/hf_cache")  # C: is nearly full
+if os.name == "nt":  # local Windows box: C: is nearly full
+    os.environ.setdefault("HF_HOME", "D:/hf_cache")
 from datasets import load_dataset  # noqa: E402
 
 OUT = Path(__file__).parent / "data"
